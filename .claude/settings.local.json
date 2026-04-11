@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(conda run:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(crontab -)",
+      "Bash(crontab:*)"
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+Write a concise markdown-ready section summary for this editorial section.
+
+Return one JSON object with:
+- `name`
+- `summary`
+- `item_ids`
+
+Rules:
+- `summary` should be 2 to 4 sentences.
+- Explain the connective thread between items before zooming into details.
+- Keep `item_ids` aligned to the provided section plan.
+- Do not invent facts beyond the supplied material.
+
+Section plan:
+{section_json}
+
+Section items:
+{items_json}

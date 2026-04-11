@@ -1,0 +1,10 @@
+{
+  "id": 102,
+  "type": "story",
+  "title": "Completely unrelated topic",
+  "url": "https://example.com/unrelated",
+  "by": "bob",
+  "time": 1775635300,
+  "score": 15,
+  "descendants": 3
+}

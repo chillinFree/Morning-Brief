@@ -1,0 +1,20 @@
+Summarize the following daily brief for an AI-focused user.
+
+Return valid JSON with this shape:
+{{
+  "overview": "short overall summary",
+  "sections": [
+    {{"name": "section name", "summary": "2-4 sentence summary"}}
+  ]
+}}
+
+Guidelines:
+- Prioritize signal over completeness.
+- Emphasize what matters for AI research, open-source tooling, and high-signal tech news.
+- Keep section summaries concise and factual.
+- Do not invent information not present in the items.
+
+Subject: {subject}
+
+Items:
+{sections}

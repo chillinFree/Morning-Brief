@@ -1,0 +1,20 @@
+Evaluate this morning-brief candidate and return one JSON object with exactly these keys:
+- item_id
+- main_idea
+- importance_score
+- novelty_score
+- category
+- target_audience
+- why_it_matters
+- include
+- confidence
+- supporting_signals
+
+Scoring rules:
+- `importance_score` and `novelty_score` must be floats between 0 and 1.
+- `include` should be true only when this item is worth taking up space in a concise daily brief.
+- `supporting_signals` should be a short list of evidence, not prose paragraphs.
+- Keep `main_idea` and `why_it_matters` concise and editorial, not promotional.
+
+Candidate item:
+{item_json}

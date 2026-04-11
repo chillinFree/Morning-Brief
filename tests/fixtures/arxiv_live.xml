@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <entry>
+    <id>http://arxiv.org/abs/2501.00001v1</id>
+    <updated>2026-04-08T07:00:00Z</updated>
+    <published>2026-04-08T07:00:00Z</published>
+    <title> Reliable Agent Memory for Production Systems </title>
+    <summary> Memory management for agent systems with safety constraints. </summary>
+    <author><name>A. Researcher</name></author>
+    <arxiv:primary_category term="cs.AI" />
+    <category term="cs.AI" />
+  </entry>
+</feed>

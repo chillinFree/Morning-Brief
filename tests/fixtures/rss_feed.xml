@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+  <channel>
+    <title>Example Tech Feed</title>
+    <item>
+      <title>Reliable LLM serving in practice</title>
+      <link>https://example.com/llm-serving</link>
+      <guid>rss-live-1</guid>
+      <description>Lessons from deploying LLM infrastructure.</description>
+      <pubDate>Tue, 08 Apr 2026 08:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

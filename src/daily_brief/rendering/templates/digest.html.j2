@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+    <style>
+      body { font-family: Georgia, serif; margin: 0; padding: 18px; background: #f4efe7; color: #1f2933; }
+      .container { max-width: 860px; margin: 0 auto; background: #ffffff; border: 1px solid #d9e2ec; padding: 24px; }
+      h1 { font-size: 30px; margin: 0 0 8px; }
+      h2 { font-size: 22px; margin-top: 28px; border-bottom: 2px solid #bcccdc; padding-bottom: 8px; }
+      p { line-height: 1.6; }
+      a { color: #0b6e4f; text-decoration: none; }
+      .meta { font-size: 13px; color: #52606d; margin-bottom: 18px; }
+      .exec-summary { background: #f0f4f8; padding: 14px 16px; border-left: 4px solid #0b6e4f; margin-bottom: 20px; }
+      .section-summary { color: #334e68; margin-bottom: 14px; }
+      .empty { color: #7b8794; font-style: italic; }
+      .item-card { border: 1px solid #d9e2ec; border-radius: 10px; padding: 16px; margin-bottom: 12px; background: #fffdf8; }
+      .item-title { font-size: 18px; font-weight: bold; margin: 0 0 6px; }
+      .item-meta { font-size: 13px; color: #52606d; margin-bottom: 10px; }
+      .label { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #0b6e4f; margin-bottom: 8px; }
+      .item-block { margin: 8px 0; }
+      .item-block strong { display: inline-block; min-width: 112px; color: #102a43; }
+      @media only screen and (max-width: 640px) {
+        body { padding: 8px; }
+        .container { padding: 16px; }
+        h1 { font-size: 24px; }
+        h2 { font-size: 20px; }
+        .item-block strong { display: block; min-width: auto; margin-bottom: 2px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>{{ subject }}</h1>
+      <div class="meta">{{ generated_at.strftime('%Y-%m-%d %H:%M') }} {{ timezone_name }}</div>
+      <div class="exec-summary">
+        <strong>Executive Summary</strong>
+        <p>{{ overview }}</p>
+      </div>
+      {% for section in sections %}
+      <section>
+        <h2>{{ section.name }}</h2>
+        <p class="section-summary">{{ section.summary }}</p>
+        {% if section.items %}
+          {% for item in section.items %}
+          <article class="item-card">
+            <div class="label">{{ item.source }}</div>
+            <p class="item-title"><a href="{{ item.url }}">{{ item.title }}</a></p>
+            <div class="item-meta">
+              Source: {{ item.source }}
+              {% if item.authors %} | Author: {{ ", ".join(item.authors) }}{% endif %}
+            </div>
+            <div class="item-block"><strong>Short summary</strong> {{ item.summary_short or item.content_text or "No short summary available." }}</div>
+            <div class="item-block"><strong>Why it matters</strong> {{ item.why_it_matters or "Relevant enough to make the morning brief." }}</div>
+            <div class="item-block"><strong>Link</strong> <a href="{{ item.url }}">{{ item.url }}</a></div>
+          </article>
+          {% endfor %}
+        {% else %}
+        <p class="empty">No notable updates in this section today.</p>
+        {% endif %}
+      </section>
+      {% endfor %}
+    </div>
+  </body>
+</html>

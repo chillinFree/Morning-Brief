@@ -1,0 +1,20 @@
+You are planning a morning briefing for technical readers.
+
+Return one JSON object with:
+- `overview`: 1 short paragraph
+- `sections`: a list of section objects
+
+Each section object must contain:
+- `name`
+- `angle`
+- `item_ids`
+- `audience_focus`
+
+Planning rules:
+- Create between {min_sections} and {max_sections} sections when possible.
+- Group items into coherent editorial themes.
+- Keep all `item_ids` grounded in the provided list.
+- Do not write the final brief body yet. This is only the editorial plan.
+
+Items:
+{items_json}

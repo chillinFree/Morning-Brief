@@ -1,0 +1,21 @@
+{{ subject }}
+Generated: {{ generated_at.strftime('%Y-%m-%d %H:%M') }} {{ timezone_name }}
+
+{{ overview }}
+
+{% for section in sections %}
+## {{ section.name }}
+{{ section.summary }}
+
+{% if section.items %}
+{% for item in section.items %}
+- {{ item.title }}
+  Source: {{ item.source }}
+  Short summary: {{ item.summary_short or item.content_text or "No short summary available." }}
+  Why it matters: {{ item.why_it_matters or "Relevant enough to make the morning brief." }}
+  Link: {{ item.url }}
+{% endfor %}
+{% else %}
+No notable updates in this section today.
+{% endif %}
+{% endfor %}

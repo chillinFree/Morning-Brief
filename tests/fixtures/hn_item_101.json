@@ -1,0 +1,10 @@
+{
+  "id": 101,
+  "type": "story",
+  "title": "Agent runtimes are getting observability right",
+  "url": "https://example.com/agent-observability",
+  "by": "alice",
+  "time": 1775635200,
+  "score": 80,
+  "descendants": 20
+}
