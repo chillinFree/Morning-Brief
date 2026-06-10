@@ -57,7 +57,10 @@ class GitHubRepoUpdatesSource(BriefSource):
         items: list[BriefItem] = []
         if not self._config.tracked_repos:
             return items
-        per_repo = max(1, min(self._config.events_per_repo, context.max_items))
+        keep_per_repo = max(1, min(self._config.events_per_repo, context.max_items))
+        # The /events feed is dominated by WatchEvent/ForkEvent, which we discard.
+        # Fetch a wider window so release/push/issue/PR events survive normalization.
+        fetch_per_repo = min(100, max(keep_per_repo * 10, 50))
         for repo in self._config.tracked_repos:
             url = f"{GITHUB_API_BASE}/repos/{repo}/events"
             logger.info(
@@ -70,7 +73,7 @@ class GitHubRepoUpdatesSource(BriefSource):
                     "repo": repo,
                 },
             )
-            events = self._fetcher.get_json(url, params={"per_page": per_repo})
+            events = self._fetcher.get_json(url, params={"per_page": fetch_per_repo})
             if not isinstance(events, list):
                 continue
             raw_ref = persist_json_payload(
@@ -81,7 +84,9 @@ class GitHubRepoUpdatesSource(BriefSource):
                 repo.replace("/", "_"),
                 events,
             )
-            repo_items = parse_github_events(repo, events, context.run_id, self._config.keywords, raw_ref=raw_ref)
+            repo_items = parse_github_events(
+                repo, events, context.run_id, self._config.keywords, raw_ref=raw_ref
+            )[:keep_per_repo]
             logger.info(
                 "github repo events normalized",
                 extra={

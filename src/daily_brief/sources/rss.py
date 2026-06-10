@@ -59,17 +59,33 @@ class RssFeedSource(BriefSource):
                     "feed_url": feed_url,
                 },
             )
-            xml_text = self._fetcher.get_text(feed_url)
-            raw_ref = persist_text_payload(
-                context.raw_payload_dir,
-                context.persist_raw_payloads,
-                self.name,
-                context.run_id,
-                _safe_feed_name(feed_url),
-                xml_text,
-                "xml",
-            )
-            parsed_items = parse_rss_feed(xml_text, feed_url, context.run_id, self._config.keywords, raw_ref=raw_ref)
+            try:
+                xml_text = self._fetcher.get_text(feed_url)
+                raw_ref = persist_text_payload(
+                    context.raw_payload_dir,
+                    context.persist_raw_payloads,
+                    self.name,
+                    context.run_id,
+                    _safe_feed_name(feed_url),
+                    xml_text,
+                    "xml",
+                )
+                parsed_items = parse_rss_feed(
+                    xml_text, feed_url, context.run_id, self._config.keywords, raw_ref=raw_ref
+                )
+            except Exception:
+                logger.warning(
+                    "rss feed fetch failed; skipping",
+                    extra={
+                        "run_id": context.run_id,
+                        "source": self.name,
+                        "stage": "fetch",
+                        "status": "failed",
+                        "feed_url": feed_url,
+                    },
+                    exc_info=True,
+                )
+                continue
             logger.info(
                 "rss feed normalized",
                 extra={
