@@ -140,15 +140,15 @@ def _check_sources(settings: AppSettings) -> DoctorCheck:
             details={},
         )
 
-    file_source_ok = settings.source.file.path.exists() if settings.source.file.enabled else None
+    # A missing file is not fatal: the file source falls back to the bundled demo sample.
+    file_path_exists = settings.source.file.path.exists() if settings.source.file.enabled else None
     status = "ok"
     message = "Source configuration is usable."
     if enabled_sources == ["file"]:
         status = "warn"
         message = "Only the local file source is enabled. This is fine for demos."
-    if settings.source.file.enabled and not file_source_ok:
-        status = "fail"
-        message = "File source is enabled but the input file does not exist."
+    if settings.source.file.enabled and not file_path_exists:
+        message = "File source input is missing; the bundled demo sample will be used."
 
     return DoctorCheck(
         name="sources",
@@ -157,7 +157,8 @@ def _check_sources(settings: AppSettings) -> DoctorCheck:
         details={
             "enabled_sources": enabled_sources,
             "file_source_path": str(settings.source.file.path),
-            "file_source_exists": file_source_ok,
+            "file_source_exists": file_path_exists,
+            "uses_bundled_sample": settings.source.file.enabled and not file_path_exists,
         },
     )
 
@@ -243,7 +244,6 @@ def _check_delivery(settings: AppSettings) -> DoctorCheck:
 def _check_course_demo(settings: AppSettings) -> DoctorCheck:
     ready = (
         settings.source.file.enabled
-        and settings.source.file.path.exists()
         and settings.workflow.checkpoint_enabled
         and settings.email.provider == "console"
     )

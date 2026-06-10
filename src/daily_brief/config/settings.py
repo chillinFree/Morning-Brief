@@ -4,10 +4,22 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Any
 
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+from daily_brief.config.paths import daily_brief_home, resolve_under_home
+
 _ENV_FILE = ".env"
+
+
+def _rebase_sqlite_url(url: str, home: Path) -> str:
+    prefix = "sqlite:///"
+    if url.startswith(prefix):
+        db_path = Path(url.removeprefix(prefix))
+        if not db_path.is_absolute():
+            return prefix + str(resolve_under_home(db_path, home))
+    return url
 
 
 def _parse_list(value: Any) -> list[str]:
@@ -300,7 +312,14 @@ class AppSettings(BaseModel):
     @classmethod
     @lru_cache(maxsize=1)
     def load(cls) -> AppSettings:
-        return cls(
+        home = daily_brief_home()
+        env_path = home / _ENV_FILE
+        # Load the resolved home's .env so a pip/pipx install run from any
+        # directory still picks up the user's configuration. Real environment
+        # variables keep precedence (override=False).
+        if env_path.is_file():
+            load_dotenv(env_path, override=False)
+        settings = cls(
             app=AppConfig(),
             database=DatabaseConfig(),
             logging=LoggingConfig(),
@@ -319,3 +338,18 @@ class AppSettings(BaseModel):
             feishu=FeishuConfig(),
             workflow=WorkflowConfig(),
         )
+        settings._rebase_paths(home)
+        return settings
+
+    def _rebase_paths(self, home: Path) -> None:
+        """Root relative local-state paths under ``home`` (absolute paths untouched)."""
+        self.database.url = _rebase_sqlite_url(self.database.url, home)
+        self.source.file.path = resolve_under_home(self.source.file.path, home)
+        self.database.raw_payload_dir = resolve_under_home(self.database.raw_payload_dir, home)
+        self.database.outbox_dir = resolve_under_home(self.database.outbox_dir, home)
+        self.workflow.artifact_root = resolve_under_home(self.workflow.artifact_root, home)
+        self.workflow.checkpoint_path = resolve_under_home(self.workflow.checkpoint_path, home)
+        self.email.gmail_credentials_file = resolve_under_home(
+            self.email.gmail_credentials_file, home
+        )
+        self.email.gmail_token_file = resolve_under_home(self.email.gmail_token_file, home)

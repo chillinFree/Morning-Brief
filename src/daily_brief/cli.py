@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import json
 from datetime import date
+from pathlib import Path
 
 import typer
 
+from daily_brief import resources
+from daily_brief.config.paths import daily_brief_home
 from daily_brief.config.settings import AppSettings
 from daily_brief.delivery.preview_sender import preview_digest
 from daily_brief.logging.setup import configure_logging
@@ -28,6 +31,52 @@ def _load_pipeline() -> tuple[AppSettings, DailyBriefPipeline]:
 def show_config() -> None:
     settings = AppSettings.load()
     typer.echo(json.dumps(settings.model_dump(mode="json"), indent=2))
+
+
+@app.command("init")
+def init_workspace(
+    here: bool = typer.Option(
+        False,
+        "--here",
+        help="Scaffold in the current directory instead of the per-user home (~/.daily-brief).",
+    ),
+    force: bool = typer.Option(
+        False, "--force", help="Overwrite existing .env and sample data files."
+    ),
+) -> None:
+    """Scaffold a ready-to-run workspace (.env + sample data + database).
+
+    This is the recommended first command after ``pip install``. It works from
+    any directory and writes everything needed for the zero-config demo.
+    """
+    target = Path.cwd() if here else daily_brief_home()
+    target.mkdir(parents=True, exist_ok=True)
+
+    env_path = target / ".env"
+    if env_path.exists() and not force:
+        typer.echo(f".env already exists at {env_path} (use --force to overwrite)")
+    else:
+        env_path.write_text(resources.default_env_text(), encoding="utf-8")
+        typer.echo(f"Wrote {env_path}")
+
+    sample_path = target / "data" / "sample_brief_items.json"
+    sample_path.parent.mkdir(parents=True, exist_ok=True)
+    if sample_path.exists() and not force:
+        typer.echo(f"Sample data already exists at {sample_path}")
+    else:
+        sample_path.write_text(resources.sample_brief_items_text(), encoding="utf-8")
+        typer.echo(f"Wrote {sample_path}")
+
+    settings = AppSettings.load()
+    configure_logging(settings.logging)
+    init_db(settings.database)
+    typer.echo(f"Initialized database at {settings.database.url}")
+    typer.echo("")
+    typer.echo("Workspace ready. Try:")
+    typer.echo("  daily-brief dry-run        # full pipeline, writes a preview (no email sent)")
+    typer.echo("  daily-brief preview-email  # render an email preview")
+    typer.echo("  daily-brief doctor         # readiness checks")
+    typer.echo("  daily-brief serve          # web dashboard at http://127.0.0.1:8000")
 
 
 @app.command("init-db")

@@ -45,7 +45,7 @@ find_python() {
 if have uv; then
   info "Using uv ($(uv --version))"
   # uv manages/downloads a compatible Python automatically.
-  uv venv --python ">=${PY_MIN_MAJOR}.${PY_MIN_MINOR}" "${VENV_DIR}"
+  uv venv --allow-existing --python ">=${PY_MIN_MAJOR}.${PY_MIN_MINOR}" "${VENV_DIR}"
   uv pip install --python "${VENV_DIR}" -e ".[dev]"
   PYTHON="${VENV_DIR}/bin/python"
 else

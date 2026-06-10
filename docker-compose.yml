@@ -1,0 +1,37 @@
+# Daily Brief Agent — main app compose file.
+#
+#   docker compose run --rm brief dry-run     # one-off demo run (no secrets needed)
+#   docker compose up web                     # web dashboard at http://127.0.0.1:8000
+#
+# The mounted ./var volume persists the SQLite DB, email previews, and artifacts.
+# .env is optional: the app falls back to safe defaults (file source + console sender).
+
+services:
+  brief:
+    build: .
+    image: daily-brief:latest
+    container_name: daily-brief
+    # Load .env if present; the demo path works without it.
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./var:/app/var
+      - ./runs:/app/runs
+    # Override at the CLI, e.g. `docker compose run --rm brief run-now --dry-run`.
+    command: ["dry-run"]
+
+  web:
+    build: .
+    image: daily-brief:latest
+    container_name: daily-brief-web
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./var:/app/var
+      - ./runs:/app/runs
+    # Bind to 0.0.0.0 so the dashboard is reachable from the host.
+    command: ["serve", "--host", "0.0.0.0", "--port", "8000"]

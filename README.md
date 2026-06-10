@@ -15,20 +15,67 @@ The scaffold is runnable locally today with:
 - working source plugins for arXiv, GitHub tracked repos, Hacker News, RSS, plus a local demo file source
 - a console/outbox sender
 
-## Quickstart
+## Install & run (pick one)
+
+The agent ships a bundled demo sample and a default config, so the zero-config
+`dry-run` works on any machine with **no secrets and no extra files**. It writes
+all local state (SQLite DB, previews, artifacts) to a per-user home directory
+(`~/.daily-brief`) unless you run it inside a checkout/workspace.
+
+### Option A — pipx (recommended for end users)
+
+Installs the `daily-brief` command globally in an isolated environment.
 
 ```bash
-conda run -n brief python -m pip install -e ".[dev]"
-cp .env.example .env
-conda run -n brief daily-brief init-db
-conda run -n brief daily-brief dry-run
-conda run -n brief daily-brief preview-email
-conda run -n brief daily-brief doctor
-conda run -n brief daily-brief show-graph
-conda run -n brief daily-brief list-runs --limit 5
+pipx install "git+https://github.com/your-org/daily-brief-agent.git"
+daily-brief dry-run         # zero-config demo, writes a preview
+daily-brief init            # scaffold ~/.daily-brief/.env you can edit
+daily-brief doctor          # readiness checks
+daily-brief serve           # web dashboard at http://127.0.0.1:8000
 ```
 
-If you want an AI-focused live-source setup, start from [`config/example.ai-focused.env`](/home/chillinfree/MorningBrief/config/example.ai-focused.env) instead of the minimal `.env.example`.
+### Option B — pip
+
+```bash
+pip install "git+https://github.com/your-org/daily-brief-agent.git"
+# or, after publishing to PyPI:  pip install daily-brief-agent
+daily-brief dry-run
+```
+
+### Option C — clone + one-command setup
+
+Best for development. Creates a local `.venv`, installs everything, writes `.env`,
+and initializes the database. Works on macOS / Linux (`setup.sh`) and Windows
+(`setup.ps1`); both auto-use [uv](https://docs.astral.sh/uv/) when available.
+
+```bash
+git clone https://github.com/your-org/daily-brief-agent.git
+cd daily-brief-agent
+make setup            # or: ./scripts/setup.sh   (Windows: ./scripts/setup.ps1)
+make dry-run          # or: .venv/bin/daily-brief dry-run
+```
+
+### Option D — Docker (no Python toolchain needed)
+
+```bash
+docker compose run --rm brief dry-run   # one-off demo
+docker compose up web                   # dashboard at http://127.0.0.1:8000
+```
+
+### Where does my data live?
+
+| Situation | Home directory used |
+|---|---|
+| Run inside a checkout or `init --here` workspace | the current directory |
+| `pip`/`pipx` install run from any other directory | `~/.daily-brief` |
+| `DAILY_BRIEF_HOME` is set | that path |
+
+Relative paths in `.env` (e.g. `var/daily_brief.db`, `runs/`) are resolved under
+that home directory. Absolute paths are used as-is.
+
+If you want an AI-focused live-source setup, start from
+[`config/example.ai-focused.env`](config/example.ai-focused.env) instead of the
+bundled defaults.
 
 ## What is implemented
 
@@ -59,7 +106,13 @@ Stubbed behind interfaces:
 - Gmail API sender
 - production LLM providers
 
-## Local setup
+## Local setup (development)
+
+The fastest path is `make setup` (or `./scripts/setup.sh`), which creates a
+`.venv`, installs the project with dev deps, writes `.env`, and initializes the
+database. The steps below show the same flow manually. Conda is optional — any
+Python 3.11+ environment works; just substitute your interpreter for the
+`conda run -n brief` prefix (or activate your `.venv` and drop the prefix).
 
 ### 1. Create and activate the environment
 
@@ -180,7 +233,7 @@ conda run -n brief daily-brief schedule
 Recommended for a single-machine setup.
 
 ```cron
-0 8 * * * cd /home/chillinfree/MorningBrief && /home/chillinfree/workspace/anaconda3/bin/conda run -n brief daily-brief run-now >> /home/chillinfree/MorningBrief/var/cron.log 2>&1
+0 8 * * * cd /path/to/daily-brief-agent && .venv/bin/daily-brief run-now >> var/cron.log 2>&1
 ```
 
 ### Duplicate-send protection
@@ -266,7 +319,7 @@ src/daily_brief/
 - The default enabled source is `file`, which reads `data/sample_brief_items.json`.
 - GitHub "trending" is intentionally not the MVP path. The stable first implementation uses tracked repository events instead.
 - Secrets must be supplied only through environment variables when external providers are added.
-- `.env`, `credentials.json`, and `var/` are ignored by default via [`.gitignore`](/home/chillinfree/MorningBrief/.gitignore).
+- `.env`, `credentials.json`, and `var/` are ignored by default via [`.gitignore`](.gitignore).
 
 ## Gmail API setup
 
@@ -287,7 +340,7 @@ Relevant Google docs:
 
 ## Next sources
 
-Planned source-integration notes are in [`docs/next-sources.md`](/home/chillinfree/MorningBrief/docs/next-sources.md), covering:
+Planned source-integration notes are in [`docs/next-sources.md`](docs/next-sources.md), covering:
 - Twitter/X
 - GradCafe / forums
 - NBA data sources

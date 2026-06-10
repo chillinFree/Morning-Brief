@@ -5,12 +5,25 @@ build-backend = "hatchling.build"
 [project]
 name = "daily-brief-agent"
 version = "0.1.0"
-description = "Production-oriented Daily Brief Agent scaffold."
+description = "Local-first Daily Brief Agent: collect, rank, summarize, and deliver a morning digest."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
   { name = "Codex" }
+]
+keywords = ["digest", "newsletter", "rss", "arxiv", "hackernews", "langgraph", "agent"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Communications :: Email",
+  "Topic :: Office/Business :: News/Diary",
 ]
 dependencies = [
   "apscheduler>=3.10.4,<4",
@@ -39,12 +52,35 @@ dev = [
   "ruff>=0.4.4,<1",
 ]
 
+[project.urls]
+Homepage = "https://github.com/your-org/daily-brief-agent"
+Repository = "https://github.com/your-org/daily-brief-agent"
+Issues = "https://github.com/your-org/daily-brief-agent/issues"
+
 [project.scripts]
 daily-brief = "daily_brief.cli:app"
 daily-brief-scheduler = "daily_brief.scheduler_entry:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/daily_brief"]
+# Bundle non-Python data so a pip/pipx install runs out of the box from anywhere.
+artifacts = [
+  "**/*.json",
+  "**/*.env",
+  "**/*.j2",
+  "**/*.txt",
+  "**/*.html",
+  "**/*.xml",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src",
+  "data/sample_brief_items.json",
+  "config",
+  "README.md",
+  ".env.example",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
