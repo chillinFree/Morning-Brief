@@ -31,4 +31,15 @@ def build_senders(settings: AppSettings) -> list[DeliveryTarget]:
                 sender=FeishuSender(settings.feishu, settings.database.outbox_dir),
             )
         )
+    # Always keep a local console/outbox channel so the live demo produces a
+    # rendered brief on disk even when external delivery (Feishu webhook,
+    # Gmail/SMTP) is unconfigured or fails. Skipped when console is already the
+    # configured provider to avoid duplicate writes.
+    if all(target.provider != "console" for target in targets):
+        targets.append(
+            DeliveryTarget(
+                provider="console",
+                sender=ConsoleEmailSender(settings.database.outbox_dir),
+            )
+        )
     return targets

@@ -126,6 +126,18 @@ conda run -n brief daily-brief preview-email
 
 This writes HTML and plaintext previews to `var/outbox/`.
 
+### 5c. Open the web dashboard
+
+```bash
+uv run daily-brief serve --host 127.0.0.1 --port 8000
+```
+
+Then open http://127.0.0.1:8000. The dashboard shows the latest rendered brief,
+lists recent runs, lets you trigger a new run (dry-run or send) from the browser,
+and exposes each run's workflow-stage artifacts on its detail page. It is a thin
+presentation layer over `DailyBriefPipeline` and reads the same runs, digests, and
+`runs/` artifacts the CLI produces.
+
 ### 6. Start the scheduler
 
 ```bash
@@ -148,6 +160,7 @@ conda run -n brief daily-brief backfill-date 2026-04-01 --dry-run
 conda run -n brief daily-brief show-graph
 conda run -n brief daily-brief send-test-email
 conda run -n brief daily-brief list-runs --limit 10
+conda run -n brief daily-brief serve
 conda run -n brief daily-brief schedule
 conda run -n brief pytest
 ```
@@ -242,6 +255,7 @@ src/daily_brief/
   storage/
   summarization/
   utils/
+  web/
 ```
 
 ## Notes

@@ -1,0 +1,23 @@
+services:
+  wewe-rss:
+    image: cooderl/wewe-rss-sqlite:latest
+    container_name: wewe-rss
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_TYPE: sqlite
+      # UI/login auth code. The public /feeds endpoints do NOT require this,
+      # so the Daily Brief pipeline can read feeds without it.
+      AUTH_CODE: "${WEWE_AUTH_CODE:-morningbrief2026}"
+      # Used to build absolute RSS links shown in the UI.
+      SERVER_ORIGIN_URL: "http://localhost:4000"
+      # Conservative settings to protect the bound (main) WeChat/微信读书 account:
+      # - FEED_MODE left at default (headline+summary) instead of fulltext, to
+      #   avoid an extra backend request per article.
+      # - Refresh only twice a day.
+      # - Generous delay between requests to avoid Tencent rate-limiting ("小黑屋").
+      CRON_EXPRESSION: "35 5,17 * * *"
+      UPDATE_DELAY_TIME: "120s"
+    volumes:
+      - ./data:/app/data

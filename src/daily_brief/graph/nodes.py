@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import smtplib
 from collections import OrderedDict
 from collections.abc import Callable
 from datetime import UTC, datetime
+from html import unescape
 from typing import Any, Literal
 
 import httpx
@@ -13,6 +15,7 @@ from pydantic import ValidationError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from daily_brief.aggregation.dedup import deduplicate_items
+from daily_brief.aggregation.diversity import interleave_by_key, source_channel
 from daily_brief.aggregation.explanations import explain_why_it_matters
 from daily_brief.aggregation.ranking import score_items
 from daily_brief.aggregation.topicing import TOPIC_GENERAL, assign_topic
@@ -110,7 +113,14 @@ class MorningBriefNodes:
                 self._dependencies.settings.workflow.candidate_limit,
                 max(len(scored), 1),
             )
-            candidates = scored[:limit]
+            # Keep the candidate pool balanced across sources (round-robin) so
+            # downstream evaluation/selection can build a multi-source brief
+            # instead of an arXiv-only candidate list.
+            candidates = interleave_by_key(
+                scored,
+                key=source_channel,
+                limit=limit,
+            )
             update = {"candidate_items": candidates}
             snapshot = {
                 "run_id": state["run_id"],
@@ -204,10 +214,13 @@ class MorningBriefNodes:
                 allow_include_override=True,
             )
             if len(selected) < self._dependencies.settings.workflow.min_selected_items:
-                ranked_candidates = sorted(
-                    state.get("candidate_items", []),
-                    key=lambda item: item.final_score or 0.0,
-                    reverse=True,
+                ranked_candidates = interleave_by_key(
+                    sorted(
+                        state.get("candidate_items", []),
+                        key=lambda item: item.final_score or 0.0,
+                        reverse=True,
+                    ),
+                    key=source_channel,
                 )
                 selected_ids = {item.id for item in selected}
                 for item in ranked_candidates:
@@ -384,7 +397,31 @@ class MorningBriefNodes:
                         )
                     )
                     continue
-                external_id = self._send_digest(target.sender.send, digest)
+                try:
+                    external_id = self._send_digest(target.sender.send, digest)
+                except Exception as exc:  # noqa: BLE001 - one bad channel must not abort the run
+                    # A failing channel (e.g. an unconfigured Feishu webhook)
+                    # should not crash the whole run: the digest is still
+                    # rendered, persisted, and shown on the dashboard, and other
+                    # channels (console/outbox) still deliver.
+                    logger.warning(
+                        "delivery channel failed",
+                        extra={
+                            "run_id": state["run_id"],
+                            "provider": target.provider,
+                            "stage": "deliver_output",
+                            "status": "failed",
+                            "error": str(exc),
+                        },
+                    )
+                    results.append(
+                        DeliveryResult(
+                            provider=target.provider,
+                            status="failed",
+                            external_id=None,
+                        )
+                    )
+                    continue
                 results.append(
                     DeliveryResult(
                         provider=target.provider,
@@ -566,10 +603,23 @@ def _is_low_quality(item: BriefItem) -> bool:
     return any(marker in normalized_title for marker in _LOW_SIGNAL_MARKERS)
 
 
+_BLOCK_TAG_RE = re.compile(r"(?i)</(?:p|div|br|li|h[1-6]|tr)\s*>|<br\s*/?>")
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _strip_html(value: str) -> str:
+    # Feeds (HN, X/Twitter, RSS) embed HTML in item bodies. Convert block-level
+    # tags to spaces, drop the rest, then unescape entities so the brief reads
+    # as clean prose instead of leaking markup like <p>, <br>, &gt;, &#x2F;.
+    text = _BLOCK_TAG_RE.sub(" ", value)
+    text = _HTML_TAG_RE.sub("", text)
+    return unescape(text)
+
+
 def _compact_optional(value: str | None) -> str | None:
     if value is None:
         return None
-    compacted = " ".join(value.split())
+    compacted = " ".join(_strip_html(value).split())
     return compacted[:600] if compacted else None
 
 
@@ -588,7 +638,6 @@ def _select_items_from_evaluations(
     allow_include_override: bool = False,
 ) -> tuple[list[BriefItem], list[ItemEvaluation]]:
     evaluation_by_id = {evaluation.item_id: evaluation for evaluation in evaluations}
-    selected: list[BriefItem] = []
     rejected: list[ItemEvaluation] = []
     scored_candidates: list[tuple[float, BriefItem, ItemEvaluation]] = []
 
@@ -604,8 +653,13 @@ def _select_items_from_evaluations(
         else:
             rejected.append(evaluation)
 
-    for _, item, _ in sorted(scored_candidates, key=lambda row: row[0], reverse=True)[:limit]:
-        selected.append(item)
+    ranked_items = [
+        item for _, item, _ in sorted(scored_candidates, key=lambda row: row[0], reverse=True)
+    ]
+    # Interleave by source so the highest-scoring arXiv items do not fill every
+    # slot; this yields a balanced multi-source selection while preserving the
+    # within-source ranking order.
+    selected = interleave_by_key(ranked_items, key=source_channel, limit=limit)
     return selected, rejected
 
 

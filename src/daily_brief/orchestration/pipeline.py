@@ -23,7 +23,7 @@ from daily_brief.orchestration.options import ExecutionOptions
 from daily_brief.rendering.renderer import render_digest
 from daily_brief.sources.base import BriefSource
 from daily_brief.sources.registry import build_source
-from daily_brief.storage.models import RunTable
+from daily_brief.storage.models import DigestTable, RunTable
 from daily_brief.storage.repository import BriefRepository
 from daily_brief.storage.sqlite import init_db, make_session_factory, session_scope
 from daily_brief.utils.urls import parse_http_url
@@ -194,6 +194,47 @@ class DailyBriefPipeline:
         with session_scope(self._session_factory) as session:
             repository = BriefRepository(session)
             return repository.list_runs(limit=limit)
+
+    def get_run(self, run_id: str) -> RunTable | None:
+        with session_scope(self._session_factory) as session:
+            repository = BriefRepository(session)
+            return repository.get_run(run_id)
+
+    def get_digest_html(self, run_id: str) -> str | None:
+        with session_scope(self._session_factory) as session:
+            repository = BriefRepository(session)
+            digest = repository.get_digest_by_run(run_id)
+            return digest.html_body if digest is not None else None
+
+    def get_digest_record(self, run_id: str) -> DigestTable | None:
+        with session_scope(self._session_factory) as session:
+            repository = BriefRepository(session)
+            return repository.get_digest_by_run(run_id)
+
+    def latest_run_with_digest(self) -> RunTable | None:
+        with session_scope(self._session_factory) as session:
+            repository = BriefRepository(session)
+            return repository.latest_run_with_digest()
+
+    def stage_artifacts(self, run_id: str) -> list[dict[str, str]]:
+        """Return ordered workflow stage artifact files persisted for a run."""
+        root = self._settings.workflow.artifact_root
+        if not root.exists():
+            return []
+        run_dirs = sorted(root.glob(f"*_{run_id}"))
+        if not run_dirs:
+            return []
+        run_dir = run_dirs[-1]
+        stages: list[dict[str, str]] = []
+        for path in sorted(run_dir.glob("*.json")):
+            stages.append(
+                {
+                    "name": path.stem,
+                    "filename": path.name,
+                    "content": path.read_text(encoding="utf-8"),
+                }
+            )
+        return stages
 
     def mermaid_diagram(self) -> str:
         return workflow_mermaid()

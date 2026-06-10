@@ -6,6 +6,8 @@ __pycache__/
 *.pyc
 credentials*
 var/
-data/
+# Ignore local data drops but keep the demo sample committed so a fresh clone runs out-of-the-box.
+data/*
+!data/sample_brief_items.json
 logs/
 runs/

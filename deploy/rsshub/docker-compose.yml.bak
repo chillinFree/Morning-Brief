@@ -8,16 +8,21 @@ services:
       NODE_ENV: production
       CACHE_TYPE: redis
       REDIS_URL: "redis://redis:6379/"
+      PUPPETEER_WS_ENDPOINT: "ws://browserless:3000"
       # X / Twitter access. Fill TWITTER_AUTH_TOKEN in deploy/rsshub/.env
       # (the auth_token cookie value from a logged-in — ideally throwaway — X account).
       TWITTER_AUTH_TOKEN: "${TWITTER_AUTH_TOKEN:-}"
     depends_on:
       - redis
+      - browserless
 
-  # NOTE: browserless/chrome (headless Chrome for Puppeteer) is intentionally
-  # omitted. Twitter/X routes authenticate via TWITTER_AUTH_TOKEN and do not
-  # need it. If you later add routes that require a browser, re-add a
-  # `browserless` service and set PUPPETEER_WS_ENDPOINT=ws://browserless:3000.
+  browserless:
+    image: browserless/chrome:latest
+    restart: always
+    ulimits:
+      core:
+        hard: 0
+        soft: 0
 
   redis:
     image: redis:alpine

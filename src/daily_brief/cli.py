@@ -196,5 +196,23 @@ def schedule() -> None:
     run_scheduler(settings)
 
 
+@app.command("serve")
+def serve(
+    host: str = typer.Option("127.0.0.1", "--host", help="Host interface to bind."),
+    port: int = typer.Option(8000, "--port", min=1, max=65535, help="Port to listen on."),
+    reload: bool = typer.Option(False, "--reload", help="Enable autoreload for development."),
+) -> None:
+    """Serve the Morning Brief web dashboard."""
+    import uvicorn
+
+    if reload:
+        uvicorn.run("daily_brief.web.app:create_app", host=host, port=port, reload=True, factory=True)
+        return
+    from daily_brief.web.app import create_app
+
+    typer.echo(f"Serving Morning Brief dashboard at http://{host}:{port}")
+    uvicorn.run(create_app(), host=host, port=port)
+
+
 if __name__ == "__main__":
     app()

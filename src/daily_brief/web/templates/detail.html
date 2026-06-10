@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Run {{ run.id[:8] }} · Morning Brief{% endblock %}
+
+{% block chips %}
+  <span class="chip">run <b>#{{ run.id[:8] }}</b></span>
+  <span class="chip">status <b>{{ run.status }}</b></span>
+{% endblock %}
+
+{% block content %}
+  <a class="back" href="/">← cd ../dashboard</a>
+
+  <div class="grid">
+    <aside>
+      <div class="card">
+        <h2>Run Metadata</h2>
+        <dl class="kv">
+          <dt>run_id</dt><dd>{{ run.id }}</dd>
+          <dt>target</dt><dd>{{ run.target_date }}</dd>
+          <dt>status</dt><dd><span class="badge {{ run.status }}">{{ run.status }}</span></dd>
+          <dt>mode</dt><dd>{{ run.mode }}</dd>
+          <dt>dry_run</dt><dd>{{ run.dry_run }}</dd>
+          <dt>items</dt><dd>{{ run.item_count }}</dd>
+          <dt>tz</dt><dd>{{ run.timezone_name }}</dd>
+          <dt>started</dt><dd>{{ run.started_at }}</dd>
+          <dt>completed</dt><dd>{{ run.completed_at or "—" }}</dd>
+        </dl>
+        {% if run.error_message %}
+        <div class="notice failed" style="margin-top:14px"><b>error</b> <span class="muted">»</span> {{ run.error_message }}</div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h2>Workflow Stages
+          {% if stages %}<span class="count">{{ stages | length }}</span>{% endif %}
+        </h2>
+        {% if stages %}
+        {% for stage in stages %}
+        <details class="stage">
+          <summary><span class="idx">[{{ "%02d"|format(loop.index) }}]</span>{{ stage.name }}</summary>
+          <div class="stage-body">
+            <pre class="json">{{ stage.content }}</pre>
+          </div>
+        </details>
+        {% endfor %}
+        {% else %}
+        <div class="empty">no stage artifacts found on disk for this run</div>
+        {% endif %}
+      </div>
+    </aside>
+
+    <main>
+      <div class="card">
+        <h2>Rendered Brief</h2>
+        {% if has_digest %}
+        <div class="frame-wrap">
+          <div class="frame-bar">
+            <span class="dots"><i></i><i></i><i></i></span>
+            <span class="path">runs/{{ run.id[:8] }}/digest.html</span>
+          </div>
+          <iframe class="digest" src="/runs/{{ run.id }}/digest.html" title="Brief"></iframe>
+        </div>
+        {% else %}
+        <div class="empty">this run did not produce a rendered digest</div>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+{% endblock %}

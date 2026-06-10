@@ -1,0 +1,66 @@
+[
+  {
+    "source": "arxiv",
+    "source_item_id": "2506.01234",
+    "source_type": "paper",
+    "title": "Scaling Reasoning in Language Models with Verifier-Guided Search",
+    "url": "https://arxiv.org/abs/2506.01234",
+    "authors": ["Jane Researcher", "Wei Zhang"],
+    "published_at": "2026-06-09T06:30:00+00:00",
+    "content_text": "We introduce a verifier-guided search procedure that improves multi-step reasoning in large language models by reranking candidate chains of thought against a learned correctness signal, yielding consistent gains on math and code benchmarks.",
+    "summary_short": "Verifier-guided search boosts LLM multi-step reasoning on math and code tasks.",
+    "tags": ["llm", "reasoning"],
+    "topics": ["AI research"],
+    "engagement": {"score": 0.0}
+  },
+  {
+    "source": "github",
+    "source_item_id": "huggingface/transformers#release-v5.2.0",
+    "source_type": "repo",
+    "title": "huggingface/transformers v5.2.0 released",
+    "url": "https://github.com/huggingface/transformers/releases/tag/v5.2.0",
+    "published_at": "2026-06-09T05:10:00+00:00",
+    "content_text": "Release v5.2.0 adds native support for several new open-weight models, faster attention kernels, and improved quantization utilities for inference on consumer GPUs.",
+    "summary_short": "Transformers v5.2.0 adds new model support, faster kernels, and better quantization.",
+    "tags": ["release", "open-source", "inference"],
+    "topics": ["Open-source / GitHub"],
+    "engagement": {"stars": 142000}
+  },
+  {
+    "source": "hackernews",
+    "source_item_id": "hn-40123456",
+    "source_type": "thread",
+    "title": "Show HN: A local-first agent that builds your morning brief",
+    "url": "https://news.ycombinator.com/item?id=40123456",
+    "published_at": "2026-06-09T04:45:00+00:00",
+    "content_text": "A developer shares a local-first pipeline that aggregates arXiv, GitHub, Hacker News, and RSS into a single summarized morning digest delivered over email or chat webhooks.",
+    "summary_short": "A local-first tool aggregates multiple sources into a daily summarized digest.",
+    "tags": ["agents", "tooling"],
+    "topics": ["Tech news"],
+    "engagement": {"comments": 87, "score": 0.0}
+  },
+  {
+    "source": "rss",
+    "source_item_id": "openai-news-20260609",
+    "source_type": "news",
+    "title": "New developer tools for building reliable agents",
+    "url": "https://openai.com/news/agent-tooling-update",
+    "published_at": "2026-06-09T03:20:00+00:00",
+    "content_text": "An update introduces evaluation harnesses, tracing, and structured output guarantees aimed at making production agent deployments more reliable and observable.",
+    "summary_short": "New tooling targets reliability and observability for production agents.",
+    "tags": ["ai", "agents"],
+    "topics": ["Tech news"]
+  },
+  {
+    "source": "rss",
+    "source_item_id": "oreilly-radar-20260608",
+    "source_type": "news",
+    "title": "The state of small language models in 2026",
+    "url": "https://feeds.feedburner.com/oreilly/radar/small-lms-2026",
+    "published_at": "2026-06-08T22:00:00+00:00",
+    "content_text": "An overview of how compact, efficient language models are increasingly deployed on-device, trading raw capability for latency, privacy, and cost advantages.",
+    "summary_short": "Small, efficient LMs gain traction for on-device, low-latency, private use cases.",
+    "tags": ["llm", "ml"],
+    "topics": ["AI research"]
+  }
+]

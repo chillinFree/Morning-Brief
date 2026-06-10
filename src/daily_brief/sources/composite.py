@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 
+from daily_brief.aggregation.diversity import interleave_by_key, source_channel
 from daily_brief.models.brief import BriefItem
 from daily_brief.sources.base import BriefSource, SourceFetchContext
 
@@ -29,4 +30,11 @@ class CompositeBriefSource(BriefSource):
                         "status": "failed",
                     },
                 )
-        return collected[: context.max_items]
+        # Interleave by source so the ``max_items`` cap keeps every feed
+        # represented instead of letting whichever source runs first (arXiv)
+        # monopolise all the slots.
+        return interleave_by_key(
+            collected,
+            key=source_channel,
+            limit=context.max_items,
+        )

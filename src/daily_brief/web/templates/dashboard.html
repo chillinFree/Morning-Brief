@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Morning Brief · Dashboard{% endblock %}
+
+{% block chips %}
+  <span class="chip">tz <b>{{ timezone }}</b></span>
+  <span class="chip">reasoner <b>{{ provider }}</b></span>
+  <span class="chip">delivery <b>{{ delivery }}</b></span>
+{% endblock %}
+
+{% block content %}
+  {% if trigger.status and trigger.status != "idle" %}
+  <div class="notice {{ trigger.status }}" id="trigger-notice">
+    <b>{{ trigger.status }}</b>
+    {% if trigger.mode %}<span class="muted">[{{ trigger.mode }}]</span>{% endif %}
+    <span class="muted">»</span> {{ trigger.message }}
+    {% if trigger.run_id %}<span class="muted">·</span> <a href="/runs/{{ trigger.run_id }}">inspect run →</a>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="grid">
+    <aside>
+      <div class="card">
+        <h2>Control Plane</h2>
+        <div class="stats">
+          <div class="stat"><div class="n">{{ stats.run_count }}</div><div class="l">runs</div></div>
+          <div class="stat"><div class="n">{{ stats.completed }}</div><div class="l">completed</div></div>
+          <div class="stat"><div class="n">{{ stats.total_items }}</div><div class="l">items</div></div>
+        </div>
+        <div class="pipeline">
+          <span class="node on"><b></b>collect</span><span class="link on"></span>
+          <span class="node on"><b></b>dedupe</span><span class="link on"></span>
+          <span class="node on"><b></b>rank</span><span class="link on"></span>
+          <span class="node on"><b></b>summarize</span><span class="link on"></span>
+          <span class="node on"><b></b>render</span><span class="link on"></span>
+          <span class="node on"><b></b>send</span>
+        </div>
+        <form class="actions" method="post" action="/run">
+          <button class="btn primary" type="submit" name="mode" value="dry-run">▶ exec --dry-run</button>
+          <button class="btn ghost" type="submit" name="mode" value="send"
+            onclick="return confirm('This will run the full pipeline AND deliver the brief. Continue?');">
+            ✉ exec --send
+          </button>
+        </form>
+        <p class="hint">
+          <span class="muted">dry-run</span> renders &amp; persists a brief without delivery.<br>
+          This panel auto-refreshes while a run is in flight.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Run History <span class="count">{{ stats.run_count }}</span></h2>
+        {% if runs %}
+        <div class="run-list">
+          {% for run in runs %}
+          <a class="run" href="/runs/{{ run.id }}">
+            <div class="row">
+              <span class="date">{{ run.target_date }}</span>
+              <span class="badge {{ run.status }}">{{ run.status }}</span>
+            </div>
+            <div class="meta">
+              {{ run.mode }}{% if run.dry_run %} <span class="sep">·</span> dry{% endif %}
+              <span class="sep">·</span> {{ run.item_count }} items
+              <span class="sep">·</span> <span class="hash">#{{ run.id[:8] }}</span>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">no runs yet — exec --dry-run to bootstrap the first brief</div>
+        {% endif %}
+      </div>
+    </aside>
+
+    <main>
+      <div class="card">
+        <h2>Latest Brief
+          {% if latest_run_id %}<span class="count">#{{ latest_run_id[:8] }}</span>{% endif %}
+        </h2>
+        {% if latest_run_id %}
+        <div class="frame-wrap">
+          <div class="frame-bar">
+            <span class="dots"><i></i><i></i><i></i></span>
+            <span class="path">runs/{{ latest_run_id[:8] }}/digest.html</span>
+          </div>
+          <iframe class="digest" src="/runs/{{ latest_run_id }}/digest.html" title="Latest brief"></iframe>
+        </div>
+        <p class="hint">
+          rendering run <a href="/runs/{{ latest_run_id }}">#{{ latest_run_id[:8] }}</a>
+          — open it to inspect each workflow stage artifact.
+        </p>
+        {% else %}
+        <div class="empty">no rendered brief available — generate one to view it here</div>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+{% if trigger.status == "running" %}
+<script>
+  // Poll the trigger status; reload once the run finishes so the brief appears.
+  const poll = setInterval(async () => {
+    try {
+      const res = await fetch("/api/trigger-status", { cache: "no-store" });
+      const data = await res.json();
+      if (data.status !== "running") {
+        clearInterval(poll);
+        window.location.reload();
+      }
+    } catch (e) { /* keep polling */ }
+  }, 2500);
+</script>
+{% endif %}
+{% endblock %}

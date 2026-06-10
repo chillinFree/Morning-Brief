@@ -102,3 +102,20 @@ class BriefRepository:
     def list_runs(self, limit: int = 20) -> list[RunTable]:
         statement = select(RunTable).order_by(RunTable.started_at.desc()).limit(limit)
         return list(self._session.execute(statement).scalars())
+
+    def get_run(self, run_id: str) -> RunTable | None:
+        return self._session.get(RunTable, run_id)
+
+    def get_digest_by_run(self, run_id: str) -> DigestTable | None:
+        statement = select(DigestTable).where(DigestTable.run_id == run_id).limit(1)
+        return self._session.execute(statement).scalar_one_or_none()
+
+    def latest_run_with_digest(self) -> RunTable | None:
+        statement = (
+            select(RunTable)
+            .join(DigestTable, DigestTable.run_id == RunTable.id)
+            .where(RunTable.status == "completed")
+            .order_by(RunTable.started_at.desc())
+            .limit(1)
+        )
+        return self._session.execute(statement).scalar_one_or_none()

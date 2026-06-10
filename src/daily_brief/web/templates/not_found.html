@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Not found · Morning Brief{% endblock %}
+
+{% block content %}
+  <a class="back" href="/">← cd ../dashboard</a>
+  <div class="card">
+    <div class="empty" style="border:none;background:transparent">
+      <h2 style="color:var(--red);justify-content:center">404 · run not found</h2>
+      <p style="font-family:var(--mono);font-size:13px;color:var(--muted)">
+        no run exists with id <code style="color:var(--magenta)">{{ run_id }}</code>
+      </p>
+    </div>
+  </div>
+{% endblock %}
