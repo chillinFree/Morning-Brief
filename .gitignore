@@ -11,3 +11,5 @@ data/*
 !data/sample_brief_items.json
 logs/
 runs/
+*.tex
+*.bib
